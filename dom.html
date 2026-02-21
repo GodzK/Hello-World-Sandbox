@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DOM Masterclass</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .box { padding: 20px; border: 2px solid #333; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1 id="main-title">สวัสดีชาวค่าย!</h1>
+    <p class="desc">นี่คือหน้าเว็บทดสอบ DOM</p>
+    
+    <div id="workspace" class="box">
+        <h3>พื้นที่ทำงาน (Workspace)</h3>
+    </div>
+
+    <button id="btn">✨ เเสดงผล </button>
+
+    <script>
+// 1. เล็งเป้าไปที่ปุ่ม
+const btn = document.querySelector('#btn');
+
+// 2. รอเหตุการณ์ 'click'
+btn.addEventListener('click', () => {
+    
+    // โค้ดในปีกกานี้ จะทำงานก็ต่อเมื่อปุ่มถูกคลิกเท่านั้น!
+    
+    // สร้างแท็ก <li> ใหม่
+    const newItem = document.createElement('li');
+    newItem.textContent = ""
+    newItem.textContent = "โค้ดทำงานแล้ว! ✨";
+    
+    // เอาไปยัดใน workspace
+    workspace.appendChild(newItem);
+    
+});
+    </script>
+</body>
+</html>

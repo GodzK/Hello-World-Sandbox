@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Blog Manager</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ จัดการบทความ (CRUD Operations)</h1>
+    
+    <button onclick="getPosts()">1. GET (ดึงข้อมูล)</button>
+    <div style="margin-bottom: 10px;">
+    <input type="text" id="post-title" placeholder="หัวข้อบทความใหม่">
+    <input type="text" id="post-content" placeholder="เนื้อหาบทความ">
+    <button onclick="createPost()">2. POST (สร้างใหม่)</button>
+</div>
+    <div style="margin-bottom: 10px;">
+    <input type="number" id="put-id" placeholder="ID ที่จะแก้" style="width: 100px;">
+    <input type="text" id="put-title" placeholder="หัวข้อใหม่ทั้งหมด">
+    <input type="text" id="put-content" placeholder="เนื้อหาใหม่ทั้งหมด">
+    <button onclick="updatePost()">3. PUT (แก้ไขทั้งก้อน)</button>
+</div>
+   <div style="margin-bottom: 10px;">
+    <input type="number" id="patch-id" placeholder="ID ที่จะแก้" style="width: 100px;">
+    <input type="text" id="patch-title" placeholder="เปลี่ยนแค่หัวข้อ">
+    <button onclick="patchPost()">4. PATCH (แก้ไขบางส่วน)</button>
+</div>
+    <input type="number" id="delete-id-input" placeholder="ใส่ ID ที่ต้องการลบ" style="padding: 10px; width: 150px;">
+<button onclick="deletePost()">5. DELETE (ลบข้อมูลตาม ID)</button>
+    <hr>
+    <h2>📰 หน้าฟีดบทความ (จำลอง)</h2>
+    <div id="post-container">
+        <p style="color: gray;">คลิกปุ่ม GET ด้านบนเพื่อโหลดบทความ...</p>
+    </div>
+
+    <script>
+
+      async function getPosts() {
+  try {
+    // 1. ส่งบุรุษไปรษณีย์ไปเอาข้อมูลจาก Backend
+    const response = await fetch("http://localhost:3000/posts");
+    const posts = await response.json(); 
+    
+    // 2. ไปลาก "พื้นที่ว่าง" ที่เราเตรียมไว้บนหน้าเว็บมาใช้งาน
+    const container = document.getElementById("post-container");
+    container.innerHTML = ""; // เคลียร์ข้อความเก่าทิ้งไปก่อน
+
+    // 3. วนลูปสร้างกล่องบทความทีละอัน   
+    posts.forEach(post => {
+      
+      // --- ขั้นตอนที่ 1: ผลิตชิ้นส่วน (createElement) ---
+      // สร้างกล่องหลัก (div)
+      const card = document.createElement("div");
+      card.style.border = "1px solid #ddd";
+      card.style.padding = "15px";
+      card.style.marginBottom = "10px";
+      card.style.borderRadius = "8px";
+
+      // สร้างหัวข้อ (h3)
+      const title = document.createElement("h3");
+      title.style.marginTop = "0";
+      title.style.color = "#0056b3";
+      title.textContent = `ID: ${post.id} | ${post.title}`; // เขียนข้อความใส่ h3
+
+      // สร้างเนื้อหา (p)
+      const content = document.createElement("p");
+      content.style.marginBottom = "0";
+      content.textContent = post.content; // เขียนข้อความใส่ p
+
+      // --- ขั้นตอนที่ 2: ประกอบร่าง! (appendChild) ---
+      // จับหัวข้อ(h3) และ เนื้อหา(p) ยัดเข้าไปใน กล่องหลัก(card)
+      card.appendChild(title);
+      card.appendChild(content);
+
+      // --- ขั้นตอนที่ 3: เอาขึ้นหน้าเว็บจริง ---
+      // เอากล่องที่ประกอบเสร็จแล้ว ไปใส่ในพื้นที่ว่างบนหน้าเว็บ (container)
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.log("เกิดข้อผิดพลาด:", error);
+  }
+}
+
+async function createPost() {
+  // 1. ดึงข้อมูลจากช่อง Input
+  const titleValue = document.getElementById("post-title").value;
+  const contentValue = document.getElementById("post-content").value;
+
+  // 2. เช็คว่ากรอกครบไหม
+  if (!titleValue || !contentValue) {
+    alert("⚠️ กรุณากรอกทั้งหัวข้อและเนื้อหา!");
+    return;
+  }
+
+  // 3. ปั้น Object เตรียมส่ง
+  const newPost = { title: titleValue, content: contentValue };
+
+  try {
+    const response = await fetch("http://localhost:3000/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPost)
+    });
+
+    const data = await response.json();
+    console.log("✅ สร้างสำเร็จ:", data);
+
+    // 4. ล้างช่องกรอก แล้วโหลดข้อมูลใหม่
+    document.getElementById("post-title").value = "";
+    document.getElementById("post-content").value = "";
+    getPosts();
+
+  } catch (error) {
+    console.log("🔥 เกิดข้อผิดพลาด:", error);
+  }
+}
+async function updatePost() {
+  const idValue = document.getElementById("put-id").value;
+  const titleValue = document.getElementById("put-title").value;
+  const contentValue = document.getElementById("put-content").value;
+
+  // PUT ควรจะต้องส่งข้อมูลให้ครบทุกฟิลด์เพื่อไปแทนที่ของเดิม
+  if (!idValue || !titleValue || !contentValue) {
+    alert("⚠️ PUT ต้องกรอกข้อมูลให้ครบทั้ง ID, หัวข้อ และเนื้อหา!");
+    return;
+  }
+
+  // ปั้น Object ชุดใหม่ทั้งก้อน
+  const updatedData = { title: titleValue, content: contentValue };
+
+  try {
+    const response = await fetch(`http://localhost:3000/posts/${idValue}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!response.ok) {
+        alert(`❌ แก้ไขไม่สำเร็จ! ไม่พบบทความ ID: ${idValue}`);
+        return;
+    }
+
+    const data = await response.json();
+    console.log("✅ แก้ไขทั้งก้อนสำเร็จ:", data);
+
+    // ล้างช่องกรอก แล้วโหลดข้อมูลใหม่
+    document.getElementById("put-id").value = "";
+    document.getElementById("put-title").value = "";
+    document.getElementById("put-content").value = "";
+    getPosts();
+
+  } catch (error) {
+    console.log("🔥 เกิดข้อผิดพลาด:", error);
+  }
+}
+
+async function patchPost() {
+  const idValue = document.getElementById("patch-id").value;
+  const titleValue = document.getElementById("patch-title").value;
+
+  if (!idValue || !titleValue) {
+    alert("⚠️ กรุณากรอก ID และหัวข้อใหม่ที่ต้องการเปลี่ยน!");
+    return;
+  }
+
+  // ปั้น Object ส่งไปแค่ฟิลด์ที่ต้องการแก้ (title อย่างเดียว)
+  const partialData = { title: titleValue }; 
+
+  try {
+    const response = await fetch(`http://localhost:3000/posts/${idValue}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(partialData)
+    });
+
+    if (!response.ok) {
+        alert(`❌ แก้ไขไม่สำเร็จ! ไม่พบบทความ ID: ${idValue}`);
+        return;
+    }
+
+    const data = await response.json();
+    console.log("✅ แก้ไขบางส่วนสำเร็จ:", data);
+
+    // ล้างช่องกรอก แล้วโหลดข้อมูลใหม่
+    document.getElementById("patch-id").value = "";
+    document.getElementById("patch-title").value = "";
+    getPosts();
+
+  } catch (error) {
+    console.log("🔥 เกิดข้อผิดพลาด:", error);
+  }
+}
+
+async function deletePost() {
+  // 1. เล็งเป้าและดึงค่า(value) ที่ผู้ใช้พิมพ์ในช่อง Input
+  const inputElement = document.getElementById("delete-id-input");
+  const postId = inputElement.value;
+
+  // 2. ดักไว้ก่อน: ถ้าผู้ใช้ไม่ได้กรอกอะไรเลย ให้แจ้งเตือนแล้วหยุดทำงาน
+  if (!postId) {
+    alert("⚠️ กรุณาใส่ ID ที่ต้องการลบก่อนครับ!");
+    return; // return เปล่าๆ คือการสั่งหยุดฟังก์ชันทันที ไม่ทำโค้ดบรรทัดล่างต่อ
+  }
+
+  try {
+    // 3. ส่ง Request ไปลบ โดยแทรกตัวแปร postId ไว้ท้าย URL (ใช้สัญลักษณ์ Backtick ` `)
+    const response = await fetch(`http://localhost:3000/posts/${postId}`, {
+      method: "DELETE"
+    });
+
+    // 4. เช็ค Status: ถ้า Backend ตอบกลับมาว่าไม่เจอ (เช่น 404 Not Found)
+    if (!response.ok) {
+        alert(`❌ ลบไม่สำเร็จ! ไม่พบบทความ ID: ${postId}`);
+        return;
+    }
+
+    // 5. ลบสำเร็จ! อ่านข้อความจาก Backend
+    const data = await response.json(); 
+    console.log("✅", data.message); 
+    
+    // เคลียร์ช่อง Input ให้กลับมาว่างเปล่า
+    inputElement.value = "";
+    
+    // อัปเดตหน้าจอโดยการดึงข้อมูลใหม่มาแสดง
+    getPosts();
+
+  } catch (error) {
+    console.log("🔥 เกิดข้อผิดพลาดในการลบ:", error);
+  }
+}
+        
+    </script>
+</body>
+</html>

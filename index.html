@@ -1,279 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Blog Manager</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Todo App</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f4f7f6; color: #333; padding: 20px; max-width: 800px; margin: 0 auto; }
-        h1 { text-align: center; color: #2c3e50; }
-        
-        .control-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px; }
-        
-        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; }
-        .btn-get { background-color: #3498db; width: 100%; margin-bottom: 15px;}
-        .btn-get:hover { background-color: #2980b9; }
-        .btn-post { background-color: #2ecc71; } .btn-post:hover { background-color: #27ae60; }
-        .btn-put { background-color: #f39c12; } .btn-put:hover { background-color: #d68910; }
-        .btn-patch { background-color: #9b59b6; } .btn-patch:hover { background-color: #8e44ad; }
-        .btn-delete { background-color: #e74c3c; } .btn-delete:hover { background-color: #c0392b; }
-
-        .feed-container { display: flex; flex-direction: column; gap: 15px; }
-        .post-card { background: white; padding: 15px 20px; border-left: 5px solid #3498db; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .post-id { font-size: 0.8em; color: #7f8c8d; margin-bottom: 5px; }
-        .post-title { margin: 0 0 10px 0; color: #2c3e50; }
-        .post-content { margin: 0; color: #555; line-height: 1.5; }
+      body {
+        font-family: Arial;
+        margin: 40px;
+      }
+      .todo-item {
+        padding: 6px;
+        cursor: pointer;
+      }
+      .completed {
+        text-decoration: line-through;
+        color: gray;
+      }
     </style>
-</head>
-<body>
-
-    <h1>📝 My Blog Manager</h1>
-
-    <div class="control-panel">
-        <button class="btn-get" onclick="getPosts()">🔄 1. โหลดข้อมูลทั้งหมด (GET)</button>
-
-        <hr style="border: 0; height: 1px; background: #eee; margin: 15px 0;">
-
-        <div class="input-group">
-            <input type="text" id="input-title" placeholder="หัวข้อบทความ">
-            <input type="text" id="input-content" placeholder="เนื้อหาบทความ">
-            <button class="btn-post" onclick="createPost()">➕ 2. POST (สร้าง)</button>
-        </div>
-
-        <div class="input-group">
-            <input type="number" id="input-id" placeholder="ID ที่ต้องการจัดการ" style="flex: 0.5;">
-            <button class="btn-put" onclick="updatePost()">✏️ 3. PUT (แก้ทั้งหมด)</button>
-            <button class="btn-patch" onclick="patchPost()">🛠️ 4. PATCH (แก้บางส่วน)</button>
-            <button class="btn-delete" onclick="deletePost()">🗑️ 5. DELETE (ลบ)</button>
-        </div>
-    </div>
-
-    <h2>📰 หน้าฟีดบทความ</h2>
-    <div id="post-container" class="feed-container">
-        <p style="color: gray; text-align: center;">คลิกปุ่ม "โหลดข้อมูลทั้งหมด" ด้านบนเพื่อดูบทความ...</p>
-    </div>
+  </head>
+  <body>
+    <h2>Todo List</h2>
+    <input id="text-input" placeholder="ชื่องาน" />
+    <button id="add-btn">เพิ่มงาน</button>
+    <hr />
+    <ul id="todo-list"></ul>
 
     <script>
-      const inputTitle = document.getElementById('input-title');
-const inputContent = document.getElementById('input-content');
-const inputId = document.getElementById('input-id');
-      // getPosts
-async function getPosts() {
-    try {
-        console.log("กำลังไปเอาข้อมูล...");
-        
-        // 1. ส่งคำขอไปหา Server (ถ้าไม่ใส่ options จะแปลว่า GET)
-        // ลองแกล้งพิมพ์ URL ผิดดูครับ เช่น /postssss
-        const response = await fetch("http://localhost:3000/posts");
+      const input = document.getElementById("text-input");
+      const addBtn = document.getElementById("add-btn");
+      const list = document.getElementById("todo-list");
 
-        // 2. เช็ค Status: ถ้า Server ตอบกลับมาว่า 404 Not Found หรือ 500 Error
-        // fetch จะไม่ถือว่า Error (เพราะมันถือว่าส่งจดหมายสำเร็จ) เราเลยต้องเช็ค response.ok เสมอ!
-        if (!response.ok) {
-            // โยน Error ทิ้งไปให้ catch ดักจับ!
-            throw new Error(`ว้าก! ดึงข้อมูลไม่สำเร็จ (รหัส: ${response.status})`); 
+      let todos = [
+        {
+          id: 1,
+          text: "Learn JavaScript",
+          completed: false,
+        },
+      ];
+      render();
+     function render() {
+  list.innerHTML = "";
+
+  todos.forEach(todo => {
+    const li = document.createElement("li");
+    li.className = "todo-item";
+    li.dataset.id = todo.id;
+
+    // สร้าง span เก็บ text
+    const span = document.createElement("span");
+    span.textContent = todo.text;
+    li.appendChild(span);
+
+    if (todo.completed) li.classList.add("completed");
+
+    // ปุ่ม edit
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "edit";
+    editBtn.className = "edit-btn";
+    li.appendChild(editBtn);
+
+    // ปุ่ม delete
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "delete";
+    deleteBtn.className = "delete-btn";
+    li.appendChild(deleteBtn);
+
+    list.appendChild(li);
+  });
+}
+
+      list.addEventListener("click", (e) => {
+  // หา li ที่ใกล้ที่สุดจาก element ที่คลิก
+  const li = e.target.closest("li");
+  if (!li) return; // ถ้าไม่ได้คลิกใน li จบเลย
+  const id = Number(li.dataset.id); // ดึง id จาก dataset
+
+  // หา todo ใน state
+  const todo = todos.find(t => t.id === id);
+  if (!todo) return;
+if(e.target.classList.contains("edit-btn")){
+        const id = Number(e.target.parentElement.dataset.id)
+        const todo = todos.find(t => t.id === id)
+        const newText = prompt("Edit todo", todo.text)
+        if(newText !== null && newText.trim() !== ""){
+            todo.text = newText.trim() // update state
+            render()
         }
-        // 3. ถ้าผ่านบรรทัดบนมาได้ แปลว่าสำเร็จ! สั่งแกะกล่อง JSON ได้เลย
-        const data = await response.json();
-        
-        // สำหรับ GET ข้อมูลมักจะมาเป็น Array โง่ๆ เช่น [{id: 1, title: '...'}, {id: 2, title: '...'}]
-        console.log("สำเร็จ! ได้ Array มาแล้ว:", data);
-        displayPosts(data);
-        
-        // มือใหม่มักงงว่าเอาไปทำอะไรต่อ? คำตอบคือ เอาไปวนลูป (forEach) เพื่อสร้าง DOM ไงล่ะ!
-        // renderPostsToDOM(data); 
-
-    } catch (error) {
-        // 4. ถุงลมนิรภัยทำงาน! ถ้าเน็ตหลุด หรือติด throw new Error ด้านบน จะมากระจุกตรงนี้
-        console.error("🔥 เกิดข้อผิดพลาด:", error.message);
-        alert("ขออภัย โหลดข้อมูลไม่ได้ ลองใหม่อีกครั้งนะ");
-    }
-}
-async function createPost() {
-const titleValue = inputTitle.value;
- const contentValue = inputContent.value;
-// ดัก Error ก่อนส่ง: ถ้าผู้ใช้ไม่พิมพ์อะไรเลย อย่าเพิ่งส่งไปกวน Server!
-    if (!titleValue || !contentValue) {
-        alert(" กรุณากรอกทั้งหัวข้อและเนื้อหาให้ครบก่อนครับ");
-        return; // สั่ง return เพื่อหยุดการทำงานของฟังก์ชันทันที
-   }
-    const newPost = { title: titleValue, content: contentValue };
-
-    try {
-        const response = await fetch("http://localhost:3000/posts", {
-            method: "POST", // ต้องบอกว่าเป็น POST
-            headers: { 
-                "Content-Type": "application/json" // สำคัญ! ต้องบอก Server ว่า "ของที่ส่งไปคือ JSON นะ"
-            },
-            // สำคัญ! Server อ่าน Object ของ JS ไม่ออก ต้องบีบอัดเป็น Text ด้วย stringify
-            body: JSON.stringify(newPost) 
-        });
-
-        if (!response.ok) throw new Error("บันทึกไม่สำเร็จ!");
-
-        // 💡 การจัดการค่าที่ได้มา:
-        // ปกติเวลา POST สำเร็จ Server ใจดีจะส่ง "ข้อมูลก้อนใหม่ที่เพิ่งถูกสร้าง (พร้อม ID)" กลับมาให้เราดูด้วย
-        const responseData = await response.json();
-        
-        console.log("สร้างสำเร็จ! Server ตอบกลับมาว่า:", responseData);
-        // สิ่งที่เราได้ มักจะเป็น { message: "สร้างสำเร็จ!", data: { id: 3, title: "บทความใหม่", ... } }
-        
-        alert("สร้างบทความเรียบร้อย!");
-        getPosts(); // สั่งให้ไปโหลดหน้าจอใหม่ เพื่อให้ของใหม่ขึ้นมาโชว์
-
-    } catch (error) {
-        console.error("🔥 พังจ้า:", error.message);
-    }
-}
-async function updatePost() {
-    const postId = parseInt(inputId.value); 
-    const titleValue = inputTitle.value;
-    const contentValue = inputContent.value;
-
-    if (!postId) {
-        alert("กรุณากรอก ID ให้ถูกต้องก่อนครับ");
-        return;
     }
 
-    if (!titleValue || !contentValue) {
-        alert("กรุณากรอกหัวข้อและเนื้อหาก่อนครับ");
-        return;
+if(e.target.classList.contains("delete-btn")){
+        const id = Number(e.target.parentElement.dataset.id)
+        todos = todos.filter(todo => todo.id !== id)
+        render()
+        return 
     }
+  // ถ้าคลิกที่ span หรือ li ให้ toggle completed
+  if (e.target.tagName === "LI" || e.target.tagName === "SPAN") {
+    todo.completed = !todo.completed; // สลับค่า true/false
+    render(); // วาด UI ใหม่จาก state
+  }})
 
-    const updateData = { title: titleValue, content: contentValue };
+      addBtn.addEventListener("click", () => {
+        const text = input.value.trim();
+        if (text === "") return alert("กรุณากรอกงานก่อน");
 
-    try {
-        const response = await fetch(`http://localhost:3000/posts/${postId}`, {
-            method: "PUT", // แก้ทั้งก้อน
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updateData)
-        });
+        // สร้าง object todo ใหม่
+        const newTodo = {
+          id: Date.now(), // ใช้เวลาปัจจุบันเป็น id ไม่ซ้ำกัน
+          text: text,
+          completed: false,
+        };
 
-        if (!response.ok) throw new Error("ไม่พบบทความที่ต้องการแก้ไข");
+        // เพิ่มลง state
+        todos.push(newTodo);
 
-        const result = await response.json();
-        console.log("✅ แก้ไขสำเร็จ:", result);
-        alert("อัปเดตบทความเรียบร้อย!");
-        getPosts(); // โหลดข้อมูลใหม่แสดงผล
+        input.value = "";
 
-    } catch (error) {
-        console.error("🔥 เกิดปัญหา:", error.message);
-        alert(error.message);
-    }
-}
-
-async function patchPost() {
-    const idValue = inputId.value;
-    const titleValue = inputTitle.value.trim();
-    const contentValue = inputContent.value.trim();
-
-    if (!idValue) {
-        alert("⚠️ กรุณาระบุ ID ของบทความที่ต้องการแก้ไขด้วยครับ");
-        return;
-    }
-
-    // สร้าง object เฉพาะ field ที่ไม่ว่าง
-    const dataToUpdate = {};
-    if (titleValue) dataToUpdate.title = titleValue;
-    if (contentValue) dataToUpdate.content = contentValue;
-
-    if (Object.keys(dataToUpdate).length === 0) {
-        alert("⚠️ กรุณากรอกข้อมูลใหม่อย่างน้อย 1 field เพื่อแก้ไข");
-        return;
-    }
-
-    try {
-        const response = await fetch(`http://localhost:3000/posts/${idValue}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataToUpdate)
-        });
-
-        if (!response.ok) throw new Error(`หา ID: ${idValue} ไม่เจอครับ!`);
-
-        const result = await response.json();
-        console.log("✅ PATCH สำเร็จ! ข้อมูลที่ถูกอัปเดตคือ:", result);
-
-        // เคลียร์ input
-        inputId.value = "";
-        inputTitle.value = "";
-        inputContent.value = "";
-        getPosts();
-
-    } catch (error) {
-        console.error("🔥 PATCH พัง:", error.message);
-        alert(error.message);
-    }
-}
-async function deletePost() {
-    const idValue = inputId.value;
-
-    if (!idValue) {
-        alert("⚠️ กรุณาระบุ ID ที่ต้องการลบก่อนครับ!");
-        return;
-    }
-
-    try {
-        const response = await fetch(`http://localhost:3000/posts/${idValue}`, {
-            method: "DELETE" 
-        });
-
-        if (!response.ok) throw new Error("ลบไม่สำเร็จ ID นี้ไม่มีอยู่จริง");
-
-        console.log(`✅ ลบ ID: ${idValue} สำเร็จแล้ว!`);
-        
-        inputId.value = ""; // ล้างช่อง ID
-        getPosts();
-
-    } catch (error) {
-        console.error("🔥 ลบไม่ได้:", error.message);
-        alert(error.message);
-    }
-}
-// ฟังก์ชันสำหรับ "วาด" ข้อมูลลงบนหน้าจอ
-function displayPosts(posts) {
-    // 1. เล็งเป้า: ไปที่ <div id="post-container"> ที่เราเตรียมไว้ใน HTML
-    const container = document.getElementById("post-container");
-
-    // 2. ล้างกระดาน: เคลียร์ข้อความ "กำลังโหลด..." หรือข้อมูลเก่าทิ้งให้หมด
-    container.innerHTML = "";
-
-    // 3. วนลูป: หยิบโพสต์แต่ละอัน (post) ออกมาจากรายการทั้งหมด (posts)
-    posts.forEach(post => {
-        
-        // --- ขั้นตอนสร้างชิ้นส่วน (Building Elements) ---
-        
-        // สร้างกล่องหลัก <div class="post-card">
-        const card = document.createElement("div");
-        card.className = "post-card";
-
-        // สร้างตัวหนังสือ ID <p class="post-id">
-        const idTag = document.createElement("p");
-        idTag.className = "post-id";
-        idTag.textContent = `ID: ${post.id}`;
-
-        // สร้างหัวข้อ <h3>
-        const titleTag = document.createElement("h3");
-        titleTag.className = "post-title";
-        titleTag.textContent = post.title;
-
-        // สร้างเนื้อหา <p>
-        const contentTag = document.createElement("p");
-        contentTag.className = "post-content";
-        contentTag.textContent = post.content;
-
-        // --- ขั้นตอนประกอบร่าง (Appending) ---
-        
-        // เอา ID, หัวข้อ, เนื้อหา ใส่เข้าไปในกล่อง (Card)
-        card.appendChild(idTag);
-        card.appendChild(titleTag);
-        card.appendChild(contentTag);
-
-        // สุดท้าย! เอา "กล่องที่ประกอบเสร็จแล้ว" ไปแปะใน container บนหน้าเว็บ
-        container.appendChild(card);
-    });
-}
+        // วาด UI ใหม่
+        render();
+      });
     </script>
-</body>
+  </body>
 </html>

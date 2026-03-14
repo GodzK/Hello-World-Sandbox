@@ -3,67 +3,53 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // สำคัญมาก! ทำให้ Backend อ่าน JSON จาก Frontend ได้
 
-// ฐานข้อมูลจำลอง
-let posts = [
-    { id: 1, title: "Hello World", content: "บทความแรกของฉัน" },
-    { id: 2, title: "เรียน Fetch API", content: "สนุกมากๆ เลยครับ" }
+// จำลอง Database
+let todos = [
+    { id: 1, text: "เรียน HTML", completed: true },
+    { id: 2, text: "เรียน Fetch API", completed: false }
 ];
+let currentId = 2;
 
-// ตัวแปรเก็บเลข ID ล่าสุด
-let lastId = posts.length; // 2 ในที่นี้
+// GET: ดึงข้อมูลทั้งหมด
+app.get('/todos', (req, res) => res.json(todos));
 
-// 1. GET
-app.get('/posts', (req, res) => res.json(posts));
-
-// 2. POST (auto-increment ID)
-app.post('/posts', (req, res) => {
-    lastId++; // เพิ่ม ID
-    const newPost = { id: lastId, ...req.body };
-    posts.push(newPost);
-    res.status(201).json({ message: "สร้างสำเร็จ!", data: newPost });
+// POST: สร้างใหม่
+app.post('/todos', (req, res) => {
+    if (!req.body.text) return res.status(400).json({ error: "ต้องมี text" });
+    const newTodo = { id: ++currentId, text: req.body.text, completed: false };
+    todos.push(newTodo);
+    res.status(201).json(newTodo);
 });
 
-// 3. PUT
-app.put('/posts/:id', (req, res) => {
+// PUT: แทนที่ทั้งก้อน
+app.put('/todos/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const index = posts.findIndex(p => p.id === id);
-    if (index !== -1) {
-        posts[index] = { id, ...req.body }; // เก็บ id ไว้เหมือนเดิม
-        res.json({ message: "อัปเดตแบบ PUT สำเร็จ!", data: posts[index] });
-    } else {
-        res.status(404).json({ error: "ไม่พบบทความ" });
-    }
+    const index = todos.findIndex(t => t.id === id);
+    if (index === -1) return res.status(404).json({ error: "ไม่พบ Todo" });
+    
+    // PUT บังคับทับข้อมูลเดิมทั้งหมด
+    todos[index] = { id, text: req.body.text, completed: req.body.completed || false };
+    res.json(todos[index]);
 });
 
-// 4. PATCH
-app.patch('/posts/:id', (req, res) => {
+// PATCH: แก้ไขบางส่วน
+app.patch('/todos/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const index = posts.findIndex(p => p.id === id);
-    if (index !== -1) {
-        posts[index] = { ...posts[index], ...req.body };
-        res.json({ message: "อัปเดตแบบ PATCH สำเร็จ!", data: posts[index] });
-    } else {
-        res.status(404).json({ error: "ไม่พบบทความ" });
-    }
+    const index = todos.findIndex(t => t.id === id);
+    if (index === -1) return res.status(404).json({ error: "ไม่พบ Todo" });
+    
+    // PATCH อัปเดตเฉพาะฟิลด์ที่ส่งมา
+    todos[index] = { ...todos[index], ...req.body };
+    res.json(todos[index]);
 });
 
-// 5. DELETE
-app.delete('/posts/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  
-  // 1. ลองหาดูก่อนว่ามี ID นี้อยู่ในเครื่องไหม?
-  const postIndex = posts.findIndex(p => p.id === id);
-
-  if (postIndex !== -1) {
-    // 2. ถ้าเจอ (Index ไม่ใช่ -1) ถึงจะลบ
-    posts.splice(postIndex, 1);
-    res.json({ message: "ลบข้อมูลสำเร็จ!" });
-  } else {
-    // 3. ถ้าไม่เจอ ส่ง 404 (Not Found) กลับไปหา Frontend ทันที!
-    res.status(404).json({ error: "ลบไม่สำเร็จ! ไม่พบบทความ ID นี้" });
-  }
+// DELETE: ลบทิ้ง
+app.delete('/todos/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    todos = todos.filter(t => t.id !== id);
+    res.json({ message: "ลบสำเร็จ" });
 });
 
 app.listen(3000, () => console.log('🚀 Backend รันแล้วที่ http://localhost:3000'));

@@ -1,124 +1,103 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Todo App</title>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo API Workshop</title>
     <style>
-      body {
-        font-family: Arial;
-        margin: 40px;
-      }
-      .todo-item {
-        padding: 6px;
-        cursor: pointer;
-      }
-      .completed {
-        text-decoration: line-through;
-        color: gray;
-      }
+        /* CSS ตกแต่งเบื้องต้น (พับเก็บไว้ได้เลยไม่ต้องแก้) */
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; background: #3498db; }
+        .todo-item { display: flex; justify-content: space-between; padding: 10px; background: #f9f9f9; margin-bottom: 8px; border-left: 5px solid #ccc; }
+        .todo-item.completed { border-left-color: #2ecc71; opacity: 0.6; text-decoration: line-through; }
+        .btn-toggle { background: #f1c40f; color: #333; }
+        .btn-delete { background: #e74c3c; }
     </style>
-  </head>
-  <body>
-    <h2>Todo List</h2>
-    <input id="text-input" placeholder="ชื่องาน" />
-    <button id="add-btn">เพิ่มงาน</button>
-    <hr />
-    <ul id="todo-list"></ul>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Todo Dashboard</h1>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="วันนี้ต้องทำอะไร?">
+            <button id="add-btn">เพิ่มข้อมูล</button>
+        </div>
+        <ul id="todo-list">
+            </ul>
+    </div>
 
     <script>
-      const input = document.getElementById("text-input");
-      const addBtn = document.getElementById("add-btn");
-      const list = document.getElementById("todo-list");
+        const API_URL = "http://localhost:3000/todos";
 
-      let todos = [
-        {
-          id: 1,
-          text: "Learn JavaScript",
-          completed: false,
-        },
-      ];
-      render();
-     function render() {
-  list.innerHTML = "";
+        // =======================================================
+        // โซนที่ 1: WORKSHOP (เราจะเขียนโค้ดกันแค่ตรงนี้!)
+        // =======================================================
 
-  todos.forEach(todo => {
-    const li = document.createElement("li");
-    li.className = "todo-item";
-    li.dataset.id = todo.id;
-
-    // สร้าง span เก็บ text
-    const span = document.createElement("span");
-    span.textContent = todo.text;
-    li.appendChild(span);
-
-    if (todo.completed) li.classList.add("completed");
-
-    // ปุ่ม edit
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "edit";
-    editBtn.className = "edit-btn";
-    li.appendChild(editBtn);
-
-    // ปุ่ม delete
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "delete";
-    deleteBtn.className = "delete-btn";
-    li.appendChild(deleteBtn);
-
-    list.appendChild(li);
-  });
-}
-
-      list.addEventListener("click", (e) => {
-  // หา li ที่ใกล้ที่สุดจาก element ที่คลิก
-  const li = e.target.closest("li");
-  if (!li) return; // ถ้าไม่ได้คลิกใน li จบเลย
-  const id = Number(li.dataset.id); // ดึง id จาก dataset
-
-  // หา todo ใน state
-  const todo = todos.find(t => t.id === id);
-  if (!todo) return;
-if(e.target.classList.contains("edit-btn")){
-        const id = Number(e.target.parentElement.dataset.id)
-        const todo = todos.find(t => t.id === id)
-        const newText = prompt("Edit todo", todo.text)
-        if(newText !== null && newText.trim() !== ""){
-            todo.text = newText.trim() // update state
-            render()
+        // 1. GET: ดึงข้อมูลทั้งหมด
+        async function fetchTodos() {
+            // เดี๋ยวเรามาเขียนตรงนี้กัน
         }
-    }
 
-if(e.target.classList.contains("delete-btn")){
-        const id = Number(e.target.parentElement.dataset.id)
-        todos = todos.filter(todo => todo.id !== id)
-        render()
-        return 
-    }
-  // ถ้าคลิกที่ span หรือ li ให้ toggle completed
-  if (e.target.tagName === "LI" || e.target.tagName === "SPAN") {
-    todo.completed = !todo.completed; // สลับค่า true/false
-    render(); // วาด UI ใหม่จาก state
-  }})
+        // 2. POST: สร้างข้อมูลใหม่
+        async function createTodo(textInput) {
+            // เดี๋ยวเรามาเขียนตรงนี้กัน
+        }
 
-      addBtn.addEventListener("click", () => {
-        const text = input.value.trim();
-        if (text === "") return alert("กรุณากรอกงานก่อน");
+        // 3. PATCH: อัปเดตสถานะ (สลับ Completed)
+        async function updateTodo(id, currentStatus) {
+            // เดี๋ยวเรามาเขียนตรงนี้กัน
+        }
 
-        // สร้าง object todo ใหม่
-        const newTodo = {
-          id: Date.now(), // ใช้เวลาปัจจุบันเป็น id ไม่ซ้ำกัน
-          text: text,
-          completed: false,
+        // 4. DELETE: ลบข้อมูล
+        async function deleteTodo(id) {
+            // เดี๋ยวเรามาเขียนตรงนี้กัน
+        }
+
+        // =======================================================
+        // โซนที่ 2: DOM MANIPULATION (พี่เตรียมไว้ให้แล้ว)
+        // =======================================================
+        function renderUI(todos) {
+            const list = document.getElementById('todo-list');
+            list.innerHTML = ""; 
+            if (todos.length === 0) return list.innerHTML = "<p>ไม่มีข้อมูล</p>";
+
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                
+                const span = document.createElement('span');
+                span.textContent = todo.text;
+
+                const actions = document.createElement('div');
+                
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn-toggle';
+                toggleBtn.textContent = todo.completed ? 'ยกเลิก' : 'เสร็จแล้ว';
+                toggleBtn.onclick = () => updateTodo(todo.id, todo.completed); // ผูกปุ่มเข้ากับฟังก์ชัน PATCH
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.textContent = 'ลบ';
+                deleteBtn.onclick = () => deleteTodo(todo.id); // ผูกปุ่มเข้ากับฟังก์ชัน DELETE
+
+                actions.appendChild(toggleBtn);
+                actions.appendChild(deleteBtn);
+                li.append(span, actions);
+                list.appendChild(li);
+            });
+        }
+
+        // ผูกปุ่ม "เพิ่มข้อมูล" เข้ากับฟังก์ชัน POST
+        document.getElementById('add-btn').onclick = () => {
+            const input = document.getElementById('todo-input');
+            if (!input.value) return alert("พิมพ์ก่อนสิ!");
+            createTodo(input.value);
+            input.value = ""; 
         };
 
-        // เพิ่มลง state
-        todos.push(newTodo);
-
-        input.value = "";
-
-        // วาด UI ใหม่
-        render();
-      });
+        // สั่งให้ดึงข้อมูลทันทีที่เปิดเว็บ
+        fetchTodos(); 
     </script>
-  </body>
+</body>
 </html>

@@ -12,7 +12,7 @@
         button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; background: #3498db; }
         .todo-item { display: flex; justify-content: space-between; padding: 10px; background: #f9f9f9; margin-bottom: 8px; border-left: 5px solid #ccc; }
         .todo-item.completed { border-left-color: #2ecc71; opacity: 0.6; text-decoration: line-through; }
-        .btn-toggle { background: #f1c40f; color: #333; }
+        .btn-edit { background: #f1c40f; color: #333; }
         .btn-delete { background: #e74c3c; }
     </style>
 </head>
@@ -36,22 +36,76 @@
 
         // 1. GET: ดึงข้อมูลทั้งหมด
         async function fetchTodos() {
-            // เดี๋ยวเรามาเขียนตรงนี้กัน
+           try {
+            const response = await fetch(API_URL);
+            if (!response.ok) {
+              throw new Error(`โหลดไม่ขึ้น ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            renderUI(data)
+           }
+           catch(err){
+            console.error(err.message);
+           }
         }
 
         // 2. POST: สร้างข้อมูลใหม่
         async function createTodo(textInput) {
-            // เดี๋ยวเรามาเขียนตรงนี้กัน
+            try {
+              const response = await fetch(API_URL , {
+                method : "POST",
+                headers : {
+                  "Content-Type" : "application/json"
+                },
+                body : JSON.stringify({text : textInput})
+              });
+              if (!response.ok) throw new Error("สร้าง Todo ไม่สำเร็จ");
+              fetchTodos();
+           
+            }
+            catch(err){
+
+            }
         }
 
         // 3. PATCH: อัปเดตสถานะ (สลับ Completed)
         async function updateTodo(id, currentStatus) {
             // เดี๋ยวเรามาเขียนตรงนี้กัน
+            try {
+              const updateData = {completed : !currentStatus}
+
+              const response = await await fetch(`${API_URL}/${id}` , {
+                method : "PATCH",
+                headers : {
+                  "Content-Type" : "application/json"
+                },
+                body : JSON.stringify(updateData)
+              });
+              if (!response.ok) throw new Error("อัปเดตไม่สำเร็จ");
+
+              fetchTodos();
+              
+            } catch (error) {
+              console.error("🔥 PATCH พัง:", error.message);
+            }
         }
 
         // 4. DELETE: ลบข้อมูล
         async function deleteTodo(id) {
-            // เดี๋ยวเรามาเขียนตรงนี้กัน
+           try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE" 
+        });
+
+        if (!response.ok) throw new Error("หาข้อมูลที่จะลบไม่เจอ");
+
+        fetchTodos(); // ลบเสร็จ โหลดข้อมูลมาวาดใหม่
+
+    } catch (error) {
+        console.error("🔥 DELETE พัง:", error.message);
+    }
         }
 
         // =======================================================
@@ -71,17 +125,17 @@
 
                 const actions = document.createElement('div');
                 
-                const toggleBtn = document.createElement('button');
-                toggleBtn.className = 'btn-toggle';
-                toggleBtn.textContent = todo.completed ? 'ยกเลิก' : 'เสร็จแล้ว';
-                toggleBtn.onclick = () => updateTodo(todo.id, todo.completed); // ผูกปุ่มเข้ากับฟังก์ชัน PATCH
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-edit';
+                editBtn.textContent = todo.completed ? 'ยกเลิก' : 'เสร็จแล้ว';
+                editBtn.onclick = () => updateTodo(todo.id, todo.completed); // ผูกปุ่มเข้ากับฟังก์ชัน PATCH
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn-delete';
                 deleteBtn.textContent = 'ลบ';
                 deleteBtn.onclick = () => deleteTodo(todo.id); // ผูกปุ่มเข้ากับฟังก์ชัน DELETE
 
-                actions.appendChild(toggleBtn);
+                actions.appendChild(editBtn);
                 actions.appendChild(deleteBtn);
                 li.append(span, actions);
                 list.appendChild(li);
